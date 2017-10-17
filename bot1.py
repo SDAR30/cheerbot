@@ -4,7 +4,7 @@ import json
 import nltk
 import random
 
-def bot_login():
+def botLogin():
 	bot = praw.Reddit(client_id='CTiJ3GSR0H4oHg',
 		client_secret='-U3YrdWAcoNfYKBMIPeowDzDbmc',
 		user_agent='cheerb0t',
@@ -12,7 +12,7 @@ def bot_login():
 		password='')
 	return bot
 
-def getImage(bot):
+def getImg(bot):
         funsub = bot.subreddit('wholesomecomics')
         posts = funsub.top(limit=60)
         ranNum = random.randint(0,59)
@@ -20,13 +20,36 @@ def getImage(bot):
                 if i==ranNum:
                         return post.url
 
-bot = bot_login()
+def getMsg():
+        msgNum = random.randint(0,8)
+        if msgNum == 0:
+                message = " [Maybe this will cheer you up?]("
+        elif msgNum == 1:
+                message = " [Maybe this comic will cheer you?]("
+        elif msgNum == 2:
+                message = " [Here's something to cheer you up.]("
+        elif msgNum == 3:
+                message = " [Here's a comic for you.]("
+        elif msgNum == 4:
+                message = " [Maybe this can brighten your day.]("
+        elif msgNum == 5:
+                message = " [Maybe this can lighten the mood.]("
+        elif msgNum == 6:
+                message = " [Maybe this can make you feel better.]("
+        elif msgNum == 7:
+                message = " [Hopefully this cheers you up.]("
+        else:
+                message = " [Maybe this will cheer you up?]("
+        return message
 
-file = open("afinn.json");
+bot = botLogin()
+
+file = open("stress.json");
 reader = file.read()
 data = json.loads(reader)
 
-subreddit = bot.subreddit('offmychest+tifu+confession')
+# offmychest+tifu+confession+rant+trueoffmychest
+subreddit = bot.subreddit('all')
 
 for submission in subreddit.stream.submissions():
     wordList = []
@@ -38,19 +61,22 @@ for submission in subreddit.stream.submissions():
     tokens = nltk.word_tokenize(str)
     # print submission.title, ' >>>  ', totWords
     for token in tokens:
-        if token in data:
+        if token in data and token not in wordList:
             totScore += int(data[token])
             wordList.append(token)
             wordList.append(data[token])
-    # print wordList
-    # print totScore
     comp = float(totScore)/float(totWords)
-    # print('Comparitive: ',comp)
-    if totScore < -20 and comp < -0.15:
-            funImg = getImage(bot)
+    if totScore < -27 and comp < -0.10:
             message = "{0}, your post indicated a high level of stress.\n".format(submission.author)
-            message += " [Maybe this will cheer you up?]("+funImg+")"
-            message += "\n\n\n\n ^-automated ^message ^by ^bot"
+            message += getMsg()
+            message += getImg(bot)+")\n\n ^-automated ^message ^by ^bot"
             submission.reply(message)
-            print message
-            
+            print ('Commented in ',submission.title)
+            # print '\n TESTER:'
+            # print submission.subreddit
+            # print submission.author
+            # print submission.title
+            # print submission.selftext
+            print wordList
+            # print totScore
+            # print comp
